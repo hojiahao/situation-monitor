@@ -32,7 +32,12 @@ export type PanelId =
 	| 'intel'
 	| 'correlation'
 	| 'narrative'
-	| 'fed';
+	| 'fed'
+	| 'workflow-overview'
+	| 'dependency-graph'
+	| 'role-interaction'
+	| 'timeline'
+	| 'event-log';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Global Map', priority: 1 },
@@ -59,7 +64,12 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 	intel: { name: 'Intel Feed', priority: 2 },
 	correlation: { name: 'Correlation Engine', priority: 1 },
 	narrative: { name: 'Narrative Tracker', priority: 1 },
-	fed: { name: 'Federal Reserve', priority: 1 }
+	fed: { name: 'Federal Reserve', priority: 1 },
+	'workflow-overview': { name: 'Workflow Progress', priority: 1 },
+	'dependency-graph': { name: 'Asset Dependencies', priority: 1 },
+	'role-interaction': { name: 'Role Interaction', priority: 2 },
+	'timeline': { name: 'Execution Timeline', priority: 2 },
+	'event-log': { name: 'Event Log', priority: 3 }
 };
 
 export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];

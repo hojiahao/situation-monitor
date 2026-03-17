@@ -21,7 +21,12 @@
 		SituationPanel,
 		WorldLeadersPanel,
 		PrinterPanel,
-		FedPanel
+		FedPanel,
+		WorkflowOverviewPanel,
+		DependencyGraphPanel,
+		TimelinePanel,
+		RoleInteractionPanel,
+		EventLogPanel
 	} from '$lib/components/panels';
 	import {
 		news,
@@ -31,7 +36,8 @@
 		refresh,
 		allNewsItems,
 		fedIndicators,
-		fedNews
+		fedNews,
+		workflowStore
 	} from '$lib/stores';
 	import {
 		fetchAllNews,
@@ -47,6 +53,7 @@
 	import type { Prediction, WhaleTransaction, Contract, Layoff } from '$lib/api';
 	import type { CustomMonitor, WorldLeader } from '$lib/types';
 	import type { PanelId } from '$lib/config';
+	import { MOTION_COMIC_WORKFLOW } from '$lib/config/workflow-demo';
 
 	// Modal state
 	let settingsOpen = $state(false);
@@ -184,6 +191,46 @@
 		onboardingOpen = true;
 	}
 
+	// Poll CodePilot's workflow-status API for real-time workflow data
+	const CODEPILOT_API = 'http://localhost:3000/api/workflow-status';
+	let workflowPollInterval: ReturnType<typeof setInterval> | null = null;
+	let hasRealWorkflow = false;
+
+	async function pollWorkflowStatus() {
+		try {
+			const res = await fetch(CODEPILOT_API);
+			if (!res.ok) throw new Error('not ok');
+			const data = await res.json();
+			if (data.workflow && data.workflow.meta && data.workflow.phases) {
+				// Real workflow data from CodePilot — always use it
+				workflowStore.setWorkflow(data.workflow);
+				hasRealWorkflow = true;
+			} else if (!hasRealWorkflow) {
+				// CodePilot running but no active workflow — show demo so panels aren't blank
+				workflowStore.setWorkflow(MOTION_COMIC_WORKFLOW);
+			}
+		} catch {
+			// CodePilot not running — show demo so panels aren't blank
+			if (!hasRealWorkflow) {
+				workflowStore.setWorkflow(MOTION_COMIC_WORKFLOW);
+			}
+		}
+	}
+
+	function startWorkflowPolling() {
+		// Initial fetch
+		pollWorkflowStatus();
+		// Poll every 2 seconds
+		workflowPollInterval = setInterval(pollWorkflowStatus, 2000);
+	}
+
+	function stopWorkflowPolling() {
+		if (workflowPollInterval) {
+			clearInterval(workflowPollInterval);
+			workflowPollInterval = null;
+		}
+	}
+
 	// Initial load
 	onMount(() => {
 		// Check if first visit
@@ -209,9 +256,37 @@
 		}
 		initialLoad();
 		refresh.setupAutoRefresh(handleRefresh);
+		startWorkflowPolling();
+
+		// Listen for messages from parent window (CodePilot iframe integration)
+		function handleMessage(event: MessageEvent) {
+			if (!event.data) return;
+
+			// Switch preset (e.g., show only workflow panels)
+			if (event.data.type === 'preset-switch' && event.data.presetId) {
+				settings.applyPreset(event.data.presetId);
+				onboardingOpen = false;
+				return;
+			}
+
+			// Workflow data update
+			if (event.data.type === 'workflow-update') {
+				try {
+					const wf = event.data.payload;
+					if (wf && wf.meta && wf.phases) {
+						workflowStore.setWorkflow(wf);
+					}
+				} catch (e) {
+					console.error('[workflow] Failed to process postMessage:', e);
+				}
+			}
+		}
+		window.addEventListener('message', handleMessage);
 
 		return () => {
 			refresh.stopAutoRefresh();
+			stopWorkflowPolling();
+			window.removeEventListener('message', handleMessage);
 		};
 	});
 </script>
@@ -226,6 +301,38 @@
 
 	<main class="main-content">
 		<Dashboard>
+			<!-- Workflow Panels -->
+			{#if isPanelVisible('workflow-overview')}
+				<div class="panel-slot map-slot">
+					<WorkflowOverviewPanel />
+				</div>
+			{/if}
+
+			{#if isPanelVisible('dependency-graph')}
+				<div class="panel-slot map-slot">
+					<DependencyGraphPanel />
+				</div>
+			{/if}
+
+			<!-- Timeline + Role Interaction + Event Log: same row, aligned height -->
+			<div class="panel-slot map-slot workflow-row">
+				{#if isPanelVisible('timeline')}
+					<div class="workflow-col" style="flex: 1;">
+						<TimelinePanel />
+					</div>
+				{/if}
+				{#if isPanelVisible('role-interaction')}
+					<div class="workflow-col" style="flex: 1;">
+						<RoleInteractionPanel />
+					</div>
+				{/if}
+				{#if isPanelVisible('event-log')}
+					<div class="workflow-col" style="flex: 1;">
+						<EventLogPanel />
+					</div>
+				{/if}
+			</div>
+
 			<!-- Map Panel - Full width -->
 			{#if isPanelVisible('map')}
 				<div class="panel-slot map-slot">
@@ -475,6 +582,22 @@
 	.map-slot {
 		column-span: all;
 		margin-bottom: 0.5rem;
+	}
+
+	.workflow-row {
+		display: flex;
+		gap: 0.5rem;
+		align-items: stretch;
+	}
+
+	.workflow-col {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.workflow-col > :global(.panel) {
+		flex: 1;
 	}
 
 	@media (max-width: 768px) {

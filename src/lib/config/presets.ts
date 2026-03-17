@@ -13,6 +13,13 @@ export interface Preset {
 }
 
 export const PRESETS: Record<string, Preset> = {
+	workflow: {
+		id: 'workflow',
+		name: 'Workflow Monitor',
+		icon: '⚡',
+		description: 'Claude Code workflow visualization — progress, dependencies, roles, timeline',
+		panels: ['workflow-overview', 'dependency-graph', 'role-interaction', 'timeline', 'event-log']
+	},
 	'news-junkie': {
 		id: 'news-junkie',
 		name: 'News Junkie',
@@ -104,6 +111,7 @@ export const PRESETS: Record<string, Preset> = {
 };
 
 export const PRESET_ORDER = [
+	'workflow',
 	'news-junkie',
 	'trader',
 	'geopolitics',

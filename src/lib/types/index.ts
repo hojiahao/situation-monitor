@@ -241,6 +241,94 @@ export interface MainCharacterResult {
 	sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
 }
 
+// ===== Workflow Visualization Types =====
+
+export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+export type AssetStatus = 'pending' | 'ready' | 'generating' | 'error';
+export type AssetType = 'document' | 'image' | 'data' | 'template' | 'code' | 'presentation' | 'video' | 'audio';
+export type RoleType = 'human' | 'ai_agent' | 'image_gen' | 'external_tool' | 'build_tool';
+export type DependencyType = 'produces' | 'requires' | 'references' | 'triggers';
+
+export interface WorkflowMeta {
+	name: string;
+	version: string;
+	description: string;
+	estimated_duration: string;
+	output_type: string;
+	status: PhaseStatus;
+	progress: number;
+	started_at?: string;
+	completed_at?: string;
+	source_skill?: string;
+}
+
+export interface WorkflowRole {
+	id: string;
+	name: string;
+	type: RoleType;
+	avatar: string;
+	color: string;
+	responsibilities: string[];
+	current_action?: string;
+}
+
+export interface WorkflowPhase {
+	id: string;
+	name: string;
+	description: string;
+	actor: string;
+	status: PhaseStatus;
+	progress: number;
+	inputs: string[];
+	outputs: string[];
+	quality_gate: string;
+	on_fail: string;
+	started_at?: string;
+	completed_at?: string;
+	duration_ms?: number;
+	notes?: string;
+	order: number;
+}
+
+export interface WorkflowAsset {
+	id: string;
+	name: string;
+	type: AssetType;
+	format: string;
+	produced_by: string;
+	consumed_by: string[];
+	status: AssetStatus;
+	file_path?: string;
+	preview_url?: string;
+	size?: string;
+	phase_group: string;
+}
+
+export interface WorkflowDependency {
+	from: string;
+	to: string;
+	type: DependencyType;
+	label?: string;
+}
+
+export interface WorkflowEvent {
+	id: string;
+	timestamp: string;
+	phase_id: string;
+	type: 'phase_start' | 'phase_complete' | 'asset_created' | 'quality_check' | 'error' | 'retry';
+	message: string;
+	details?: string;
+}
+
+export interface Workflow {
+	meta: WorkflowMeta;
+	roles: WorkflowRole[];
+	phases: WorkflowPhase[];
+	assets: WorkflowAsset[];
+	dependencies: WorkflowDependency[];
+	events: WorkflowEvent[];
+}
+
 /**
  * Service client configuration
  */

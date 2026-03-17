@@ -226,10 +226,10 @@
 		// Setup zoom - disable scroll wheel, allow touch pinch and buttons
 		zoom = d3
 			.zoom<SVGSVGElement, unknown>()
-			.scaleExtent([1, 6])
+			.scaleExtent([1, 12])
 			.filter((event) => {
-				// Block scroll wheel zoom (wheel events)
-				if (event.type === 'wheel') return false;
+				// Allow scroll wheel zoom
+				if (event.type === 'wheel') return true;
 				// Allow touch events (pinch zoom on mobile)
 				if (event.type.startsWith('touch')) return true;
 				// Allow mouse drag for panning
@@ -241,6 +241,40 @@
 			})
 			.on('zoom', (event) => {
 				mapGroup.attr('transform', event.transform.toString());
+				// Semantic zoom: counter-scale markers so they stay constant visual size
+				// while their positions spread apart, separating overlapping points
+				const k = event.transform.k;
+				mapGroup.selectAll('circle:not(.hotspot-hit)').each(function () {
+					const el = d3.select(this);
+					if (!el.attr('data-r')) el.attr('data-r', el.attr('r'));
+					el.attr('r', parseFloat(el.attr('data-r')!) / k);
+				});
+				mapGroup.selectAll('.hotspot-hit').each(function () {
+					const el = d3.select(this);
+					if (!el.attr('data-r')) el.attr('data-r', el.attr('r'));
+					el.attr('r', parseFloat(el.attr('data-r')!) / k);
+				});
+				mapGroup.selectAll('text').each(function () {
+					const el = d3.select(this);
+					if (!el.attr('data-fs')) el.attr('data-fs', parseFloat(el.attr('font-size') || '8'));
+					el.attr('font-size', parseFloat(el.attr('data-fs')!) / k + 'px');
+				});
+				mapGroup.selectAll('rect').each(function () {
+					const el = d3.select(this);
+					if (!el.attr('data-w')) {
+						el.attr('data-w', el.attr('width'));
+						el.attr('data-h', el.attr('height'));
+						el.attr('data-x', el.attr('x'));
+						el.attr('data-y', el.attr('y'));
+					}
+					const w = parseFloat(el.attr('data-w')!) / k;
+					const h = parseFloat(el.attr('data-h')!) / k;
+					const cx = parseFloat(el.attr('data-x')!) + parseFloat(el.attr('data-w')!) / 2;
+					const cy = parseFloat(el.attr('data-y')!) + parseFloat(el.attr('data-h')!) / 2;
+					el.attr('width', w).attr('height', h).attr('x', cx - w / 2).attr('y', cy - h / 2);
+				});
+				// Counter-scale stroke widths on country paths
+				mapGroup.selectAll('path.country').attr('stroke-width', 0.5 / k);
 			});
 
 		enableZoom();

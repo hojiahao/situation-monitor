@@ -68,6 +68,18 @@ export {
 	type RefreshState
 } from './refresh';
 
+// Workflow store
+export {
+	workflowStore,
+	workflowPhases,
+	workflowAssets,
+	workflowRoles,
+	workflowEvents,
+	workflowProgress,
+	workflowDependencies,
+	type WorkflowStoreState
+} from './workflow';
+
 // Fed store
 export {
 	fedIndicators,

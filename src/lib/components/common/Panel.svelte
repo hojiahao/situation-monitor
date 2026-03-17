@@ -120,16 +120,16 @@
 	}
 
 	.panel-title {
-		font-size: 0.65rem;
-		font-weight: 600;
+		font-size: 0.85rem;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-secondary);
+		letter-spacing: 0.06em;
+		color: #ffffff;
 		margin: 0;
 	}
 
 	.panel-count {
-		font-size: 0.65rem;
+		font-size: 0.8rem;
 		font-weight: 500;
 		color: var(--accent);
 		background: rgba(var(--accent-rgb), 0.1);
@@ -198,7 +198,10 @@
 	.panel-content {
 		flex: 1;
 		overflow-y: auto;
-		padding: 0.5rem;
+		padding: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
 	}
 
 	.panel-content.hidden {

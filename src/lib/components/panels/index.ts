@@ -18,3 +18,8 @@ export { default as MonitorsPanel } from './MonitorsPanel.svelte';
 export { default as MapPanel } from './MapPanel.svelte';
 export { default as WorldLeadersPanel } from './WorldLeadersPanel.svelte';
 export { default as FedPanel } from './FedPanel.svelte';
+export { default as WorkflowOverviewPanel } from './WorkflowOverviewPanel.svelte';
+export { default as DependencyGraphPanel } from './DependencyGraphPanel.svelte';
+export { default as TimelinePanel } from './TimelinePanel.svelte';
+export { default as RoleInteractionPanel } from './RoleInteractionPanel.svelte';
+export { default as EventLogPanel } from './EventLogPanel.svelte';
